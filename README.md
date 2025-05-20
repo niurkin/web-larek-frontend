@@ -78,7 +78,7 @@ interface IShopItem extends IId {
     price: Price;
 } // Интерфейс для описания товара
 
-type ICartItem = Pick<IShopItem, "title" | "price" | "id"> // Интерфейс для описания товара в корзине
+interface IItemCard extends IShopItem, ICartCheck {} // Интерфейс для передачи данных в компонент представления, отвечающий за карточку товара
 
 interface IProductList {
     total: number;
@@ -96,7 +96,7 @@ interface IOrderData extends IUserData, ITotalPrice {
     items: string[];
 } // Интерфейс для описания данных заказа
 
-type IOrderResult = ITotalPrice & IId // Интерфейс для описания результата, сформированного после отправки заказа
+interface IOrderResult extends ITotalPrice, IId {} // Интерфейс для описания результата, сформированного после отправки заказа
 
 interface IElementCollection {
     items: HTMLElement[];
@@ -110,23 +110,16 @@ interface IModal {
     content: HTMLElement;
 } // Интерфейс для передачи данных в компонент представления, отвечающий за модальное окно
 
-interface IButton {
-    buttonActive: boolean;
-    buttonText: string;
-} // Интерфейс для передачи данных в компонент представления, отвечающий за кнопку
-
-type ICart = IElementCollection & ITotalPrice // Интерфейс для передачи данных в компонент представления, отвечающий за корзину
-
-interface IToggler {
-    selected: string;
-} // Интерфейс для передачи данных в компонент представления, отвечающий за переключатель кнопок
+interface ICart extends IElementCollection, ITotalPrice {} // Интерфейс для передачи данных в компонент представления, отвечающий за корзину
 
 interface IFormState {
     valid: boolean;
     errors: keyof IOrderData[];
 } // Интерфейс, описывающий состояние формы, который используется для передачи данных в компонент представления, отвечающий за форму
 
-type IItemPreview = IShopItem & ICartCheck // Интерфейс для передачи данных в компонент представления, отвечающий за режим просмотра товара
+interface IContactForm extends IFormState {
+    payment: Payment;
+} // Интерфейс для передачи данных в компонент представления формы с выбором способа оплаты
 
 interface IEvents {
     on<T extends object>(event: EventName, callback: (data: T) => void): void;
@@ -195,7 +188,7 @@ interface IEvents {
 
 `items: IShopItem[]` — массив всех предметов в каталоге
 
-`cart: ICartItem[]` — массив товаров в корзине
+`cart: string[]` — массив идентификаторов товаров, добавленных в корзину
 
 `order: IOrderData` — сведения о заказе
 
@@ -203,11 +196,9 @@ interface IEvents {
 
 `getItem(id: string): IShopItem` — возвращает объект товара с указанным `id`
 
-`getCartItem(id: string): ICartItem` — возвращает объект товара в корзине с указанным `id`
-
 `setItems(items: IShopItem[])` — позволяет установить весь массив товаров в каталоге
 
-`addToCart(item: IShopItem)` — позволяет добавить товар в корзину
+`addToCart(id: string)` — позволяет добавить товар в корзину
 
 `removeFromCart(id: string)` — удаляет товар из корзины
 
@@ -257,6 +248,8 @@ interface IEvents {
 
 `_items: HTMLElement` — каталог товаров
 
+`_cartIcon: HTMLButtonElement` — иконка корзины
+
 `_cartAmount: HTMLElement` — индикатор количества товаров в корзине
 
 ##### Методы класса
@@ -265,51 +258,47 @@ interface IEvents {
 
 `set cartAmount(value: number)` — позволяет отобразить в элементе `_cartAmount` количество товаров в корзине
 
-#### Класс `Button`
+#### Класс `ItemCard`
 
-Наследует класс `Component` с переданным типом `<IButton>`.
+Наследует класс `Component` с переданным типом `<IItemCard>`.
 
-Используется для кнопок, чье текстовое содержимое и статус активности могут меняться динамически.
-
-Использует родительский конструктор.
-
-##### Методы класса
-
-`set buttonActive(value: boolean)` — меняет статус активности кнопки в зависимости от значения
-
-`set buttonText(value: string)` — определяет текстовое содержимое кнопки
-
-#### Класс `CatalogItem<T extends IShopItem = IShopItem>`
-
-Наследует класс `Component<T>`. По умолчанию принимает в переменную `T` объект, соответствующий интерфейсу `IShopItem`, но позволяет использовать любой другой интерфейс, расширяющий `IShopItem`, у классов, которые его наследуют.
-
-Используется для отображения карточки товара в каталоге.
+Используется для отображения карточки товара в различных контекстах.
 
 Конструктор принимает аргументы `container: HTMLElement` (основной контейнер компонента) и `events: IEvents` (брокер событий).
 
 ##### Поля класса
 
+`_id: string` — идентификатор товара для передачи в брокер событий
+
+`_description: HTMLElement` — описание товара (необязательное поле)
+
+`_image: HTMLImageElement` — изображение товара (необязательное поле)
+
 `_title: HTMLElement` — название товара
 
-`_category: HTMLElement` — категория товара
-
-`_image: HTMLImageElement` — изображение товара
+`_category: HTMLElement` — категория товара (необязательное поле)
 
 `_price: HTMLElement` — цена товара
 
-`_id: number` — идентификатор товара (передается в брокер событий при нажатии на карточку)
+`_index: HTMLElement` — порядковый номер товара в списке (необязательное поле)
+
+`_button: HTMLButtonElement` — кнопка добавления / удаления товара из корзины
 
 ##### Методы класса
 
-`set title(value: string)` — задает текстовое содержимое элемента `_title`
+`set id (value: string)` — определяет значение поля `_id`
 
-`set category(value: ItemCategory)` — определяет отображение элемента `_category`
+`set description (value: string)` — определяет текстовое содержимое элемента `_description`, если таковой присутствует
 
-`set image(value: string)` — отвечает за отображение элемента `_image`
+`set image (value: string)` — определяет содержимое элемента `_image`, если таковой присутствует
 
-`set price(value: Price)` — определяет отображение элемента `_price`
+`set title (value: string)` — определяет текстовое содержимое элемента `_title`
 
-`set id(value: number)` — определяет значение поля `_id`
+`set category (value: ItemCategory)` — определяет текстовое содержимое элемента `category`, если таковой присутствует
+
+`set price (value: Price)`  — определяет текстовое содержимое элемента `_price`
+
+`set inCart(value: boolean)` — определяет текстовое содержимое кнопки `_button` в соответствии со значением
 
 #### Класс `Modal`
 
@@ -333,32 +322,6 @@ interface IEvents {
 
 `close()` — отвечает за закрытие модального окна
 
-`isOpen(content?: HTMLElement): boolean` — позволяет проверить, открыто ли модальное окно, а также при желании проверить, открыто ли окно с определенным содержимым
-
-#### Класс `ItemPreview`
-
-Наследует класс `CatalogItem` с переданным типом `<IItemPreview>`.
-
-Используется для просмотра подробной информации о товаре с возможностью добавить его в корзину.
-
-Конструктор принимает аргументы `container: HTMLElement` (основной контейнер компонента) и `events: IEvents` (брокер событий).
-
-##### Поля класса
-
-Имеет все поля родительского класса, а также перечисленные ниже.
-
-`_description: HTMLElement` — описание товара
-
-`_button: Button` — кнопка добавления товара в корзину или удаления из корзины
-
-##### Методы класса
-
-`set description(value: string)` — определяет текстовое содержимое элемента `_description`
-
-`set inCart(value: boolean)` — меняет текст кнопки в зависимости от значения
-
-`renderButton(data: partial<IButton>)` — позволяет задать текст и статус активности кнопки
-
 #### Класс `Cart`
 
 Наследует класс `Component` с переданным типом `<ICart>`.
@@ -371,81 +334,31 @@ interface IEvents {
 
 `_items: HTMLElement` — контейнер для списка добавленных товаров
 
-`_button: Button` — кнопка оформления заказа
+`_button: HTMLButtonElement` — кнопка оформления заказа
 
 `_total: HTMLElement` — суммарная стоимость заказа
 
 ##### Методы класса
 
-`set items(value: HTMLElement[])` — наполняет элемент `_items` карточками товаров
+`set items(value: HTMLElement[])` — наполняет элемент `_items` карточками товаров, а также определяет статус активности кнопки `_button` в зависимости от наличия товаров
 
-`set total( value: Price)` — определяет текстовое содержимое элемента `_total`
+`set total(value: Price)` — определяет текстовое содержимое элемента `_total` 
 
-`renderButton(data: partial<IButton>)` — позволяет установить статус активности кнопки
+#### Класс `Form<T extends IFormState = IFormState>`
 
-#### Класс `CartItem`
+Наследует класс `Component<T>`. По умолчанию принимает в переменную `T` объект, соответствующий интерфейсу `IFormState`, но позволяет использовать любой другой интерфейс, расширяющий `IFormState`, у классов, которые его наследуют.
 
-Наследует класс `Component` с переданным типом `<ICartItem>`.
+Общий класс для отображения всех форм в проекте.
 
-Используется для отображения индивидуального товара в списке корзины с возможностью его удаления.
-
-Конструктор принимает аргументы `container: HTMLElement` (основной контейнер компонента) и `events: IEvents` (брокер событий).
+Конструктор принимает аргументы `container: HTMLFormElement` (основной контейнер компонента) и `events: IEvents` (брокер событий).
 
 ##### Поля класса
 
-`_index: HTMLElement` — порядковый номер товара в списке
-
-`_title: HTMLElement` — название товара
-
-`_price: HTMLElement` — цена товара
-
-`_deleteButton: HTMLButtonElement` — кнопка удаления товара
-
-`_id: string` — идентификатор товара (передается в брокер событий при нажатии на кнопку удаления)
-
-##### Методы класса
-
-`set title(value: string)` — определяет текстовое содержимое элемента `_title`
-
-`set price(value: Price)` — определяет текстовое содержимое элемента `_price`
-
-`set id(value: string)` — определяет значение поля `_id`
-
-#### Класс `Toggler`
-
-Наследует класс `Component` с переданным типом `<IToggler>`.
-
-Используется для отображения переключателя с несколькими кнопками (например, переключение способа оплаты).
-
-Конструктор принимает аргументы `container: HTMLElement` (основной контейнер компонента) и `events: IEvents` (брокер событий).
-
-##### Поля класса
-
-`_buttons: Button[]` — массив со всеми кнопками в переключателе
-
-`_selected: string` — название выбранной кнопки, соответствующее ее атрибуту `name`
-
-##### Методы класса
-
-`set selected(name: string)` — делает кнопку с указанным атрибутом `name` неактивной и задает соответствующее значение для поля `_selected`
-
-#### Класс `Form`
-
-Наследует класс `Component` с переданным типом `<IFormState>`.
-
-Используется для отображения всех форм в проекте.
-
-Конструктор принимает аргументы `container: HTMLElement` (основной контейнер компонента) и `events: IEvents` (брокер событий).
-
-##### Поля класса
-
-`_button: Button` — кнопка сабмита формы
+`_button: HTMLButtonElement` — кнопка сабмита формы
 
 `_error: HTMLElement` — отображение ошибок при заполнении или сабмите формы
 
 `_inputs: HTMLInputElement[]` — массив с текстовыми полями формы
-
-`_toggler?: Toggler` — опциональный переключатель
 
 ##### Методы класса
 
@@ -454,6 +367,38 @@ interface IEvents {
 `set valid(data: boolean)` — изменяет статус активности кнопки в зависимости от значения
 
 `displayError(value: string)` — определяет текстовое содержимое элемента `_error`
+
+#### Класс `OrderForm`
+
+Наследует класс `Form<IContactForm>`.
+
+Используется для отображения формы оформления заказа с выбором способа оплаты.
+
+Использует родительский конструктор.
+
+##### Поля класса
+
+`_paymentSelection: HTMLElement` — элемент с кнопками выбора способа оплаты.
+
+##### Методы класса
+
+`set payment(value: Payment)` — определяет статус активности кнопки с атрибутом `name`, соответствующим переданному значению
+
+`set address(value: string)` — позволяет задать значение полю с именем `address`
+
+#### Класс `ContactForm`
+
+Наследует класс `Form`.
+
+Используется для отображения формы с указанием контактных данных.
+
+Использует родительский конструктор.
+
+##### Методы класса
+
+`set email(value: string)` — позволяет задать значение полю с именем `email`
+
+`set phone(value: string)` — позволяет задать значение полю с именем `phone`
 
 #### Класс `OrderSuccess`
 

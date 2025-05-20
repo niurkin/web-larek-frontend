@@ -24,9 +24,7 @@ export interface IShopItem extends IId {
     price: Price;
 }
 
-export type ICartItem = Pick<IShopItem, "title" | "price" | "id">;
-
-export type IItemPreview = IShopItem & ICartCheck;
+export interface IItemCard extends IShopItem, ICartCheck {}
 
 export interface IProductList {
     total: number;
@@ -44,7 +42,7 @@ export interface IOrderData extends IUserData, ITotalPrice {
     items: string[];
 }
 
-export type IOrderResult = ITotalPrice & IId;
+export interface IOrderResult extends ITotalPrice, IId {}
 
 export interface IElementCollection {
     items: HTMLElement[];
@@ -58,18 +56,13 @@ export interface IModal {
     content: HTMLElement;
 }
 
-export interface IButton {
-    buttonActive: boolean;
-    buttonText: string;
-}
-
-export type ICart = IElementCollection & ITotalPrice;
-
-export interface IToggler {
-    selected: string;
-}
+export interface ICart extends IElementCollection, ITotalPrice {}
 
 export interface IFormState {
     valid: boolean;
     errors: keyof IOrderData[];
+}
+
+export interface IContactForm extends IFormState {
+    payment: Payment;
 }
