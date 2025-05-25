@@ -62,9 +62,9 @@ interface IId {
     id: string;
 } // Интерфейс для описания идентификатора товара или заказа
 
-interface ITotalPrice { 
-    total: Price;
-} // Интерфейс для описания суммарной стоимости заказа
+interface ITotalAmount { 
+    total: number;
+} // Интерфейс для описания суммарного числа
 
 interface ICartCheck {
     inCart: boolean;
@@ -78,12 +78,11 @@ interface IShopItem extends IId {
     price: Price;
 } // Интерфейс для описания товара
 
-interface IItemCard extends IShopItem, ICartCheck {} // Интерфейс для передачи данных в компонент представления, отвечающий за карточку товара
-
-interface IProductList {
-    total: number;
+interface ICatalog {
     items: IShopItem[];
-} // Интерфейс для описания списка товаров и их количества
+} // Интерфейс для описания каталога товаров
+
+interface IItemCard extends IShopItem, ICartCheck {} // Интерфейс для передачи данных в компонент представления, отвечающий за карточку товара
 
 interface IUserData {
     email: string;
@@ -91,12 +90,14 @@ interface IUserData {
     address: string;
 } // Интерфейс для описания данных пользователя
 
-interface IOrderData extends IUserData, ITotalPrice {
+interface IOrderData extends IUserData, ITotalAmount {
     payment: Payment;
     items: string[];
 } // Интерфейс для описания данных заказа
 
-interface IOrderResult extends ITotalPrice, IId {} // Интерфейс для описания результата, сформированного после отправки заказа
+type OrderErrors = Partial<Record<keyof IOrderData, string>> // Интерфейс для описания ошибок при оформлении заказа
+
+interface IOrderResult extends ITotalAmount, IId {} // Интерфейс для описания результата, сформированного после отправки заказа
 
 interface IElementCollection {
     items: HTMLElement[];
@@ -104,17 +105,18 @@ interface IElementCollection {
 
 interface IPage extends IElementCollection {
     cartAmount: number;
+    locked: boolean;
 } // Интерфейс для передачи данных в компонент представления, отвечающий за всю страницу
 
-interface IModal {
+interface IModalData {
     content: HTMLElement;
 } // Интерфейс для передачи данных в компонент представления, отвечающий за модальное окно
 
-interface ICart extends IElementCollection, ITotalPrice {} // Интерфейс для передачи данных в компонент представления, отвечающий за корзину
+interface ICart extends IElementCollection, ITotalAmount {} // Интерфейс для передачи данных в компонент представления, отвечающий за корзину
 
 interface IFormState {
     valid: boolean;
-    errors: keyof IOrderData[];
+    errors: string[];
 } // Интерфейс, описывающий состояние формы, который используется для передачи данных в компонент представления, отвечающий за форму
 
 interface IContactForm extends IFormState {
@@ -192,11 +194,13 @@ interface IEvents {
 
 `order: IOrderData` — сведения о заказе
 
+`orderErrors: OrderErrors` — объект для проверки ошибок, которые могут возникнуть при выполнении заказа
+
 ##### Методы класса
 
-`getItem(id: string): IShopItem` — возвращает объект товара с указанным `id`
-
 `setItems(items: IShopItem[])` — позволяет установить весь массив товаров в каталоге
+
+`getItem(id: string): IShopItem` — возвращает объект товара с указанным `id`
 
 `addToCart(id: string)` — позволяет добавить товар в корзину
 
@@ -204,17 +208,15 @@ interface IEvents {
 
 `clearCart()` — удаляет все товары из корзины
 
-`getCartAmount: number` — возвращает общее количество товаров в корзине
+`getCartAmount(): number` — возвращает общее количество товаров в корзине
 
-`getCartTotal: Price` — возвращает суммарную стоимость всех товаров в корзине
+`getCartTotal(): number` — возвращает суммарную стоимость всех товаров в корзине
 
-`setOrderField(field: keyof IOrderData, value: string | Payment)` — позволяет установить значение определнного поля в объекте заказа
-
-`setOrderItems(items: string[])` — позволяет указать весь массив с `id` товаров в поле `items` объекта заказа
+`setOrderField<K extends keyof IOrderData>(field: K, value: IOrderData[K])` — позволяет установить значение нужного поля в объекте заказа
 
 `inCart(id: string): boolean` — позволяет проверить, находится ли в корзине товар с указанным `id`
 
-`validate(data: Partial<IOrderData>): IFormState` — валидирует данные, указанные при оформлении заказа
+`validateOrder()` — валидирует данные пользователя, указанные при оформлении заказа
 
 #### Класс `ShopAPI`
 
@@ -228,11 +230,11 @@ interface IEvents {
 
 ##### Методы класса
 
-`getItems(): Promise<IProductList>` — позволяет получить список товаров с сервера
+`getItemList(): Promise<IShopItem[]>` — позволяет получить список товаров с сервера
 
 `getItem(id: string): Promise<IShopItem>` — позволяет получить определенный товар с сервера
 
-`placeOrder(): Promise<IOrderResult>` — позволяет разместить заказ на сервере
+`placeOrder(order: IOrderData): Promise<IOrderResult>` — позволяет разместить заказ на сервере
 
 ### Компоненты представления
 
@@ -246,17 +248,21 @@ interface IEvents {
 
 ##### Поля класса
 
+`_wrapper: HTMLElement` — обертка страницы
+
 `_items: HTMLElement` — каталог товаров
 
 `_cartIcon: HTMLButtonElement` — иконка корзины
 
-`_cartAmount: HTMLElement` — индикатор количества товаров в корзине
+`_cartCounter: HTMLElement` — индикатор количества товаров в корзине
 
 ##### Методы класса
 
 `set items(value: HTMLElement[])` — наполняет элемент каталога `_items` карточками товаров
 
-`set cartAmount(value: number)` — позволяет отобразить в элементе `_cartAmount` количество товаров в корзине
+`set cartAmount(value: number)` — позволяет отобразить в элементе `__cartCounter` количество товаров в корзине
+
+`set locked(value: boolean)` — позврляет блокировать и разблокировать прокрутку страницы
 
 #### Класс `ItemCard`
 
@@ -288,17 +294,19 @@ interface IEvents {
 
 `set id (value: string)` — определяет значение поля `_id`
 
+`set title (value: string)` — определяет текстовое содержимое элемента `_title`
+
+`set price (value: Price)`  — определяет текстовое содержимое элемента `_price`
+
 `set description (value: string)` — определяет текстовое содержимое элемента `_description`, если таковой присутствует
 
 `set image (value: string)` — определяет содержимое элемента `_image`, если таковой присутствует
 
-`set title (value: string)` — определяет текстовое содержимое элемента `_title`
-
 `set category (value: ItemCategory)` — определяет текстовое содержимое элемента `category`, если таковой присутствует
 
-`set price (value: Price)`  — определяет текстовое содержимое элемента `_price`
-
 `set inCart(value: boolean)` — определяет текстовое содержимое кнопки `_button` в соответствии со значением
+
+`getId(): string` — возвращает значение поля `_id`
 
 #### Класс `Modal`
 
@@ -321,6 +329,8 @@ interface IEvents {
 `open()` — отвечает за открытие модального окна
 
 `close()` — отвечает за закрытие модального окна
+
+`render(data: IModalData): HTMLElement` — вызывает метод класса `open()` и метод `render(data)` родителя
 
 #### Класс `Cart`
 

@@ -8,8 +8,8 @@ export interface IId {
     id: string;
 }
 
-export interface ITotalPrice {
-    total: Price;
+export interface ITotalAmount {
+    total: number;
 }
 
 export interface ICartCheck {
@@ -24,12 +24,12 @@ export interface IShopItem extends IId {
     price: Price;
 }
 
-export interface IItemCard extends IShopItem, ICartCheck {}
-
-export interface IProductList {
-    total: number;
+export interface ICatalog {
     items: IShopItem[];
 }
+
+export interface IItemCard extends IShopItem, ICartCheck {}
+
 
 export interface IUserData {
     email: string;
@@ -37,12 +37,14 @@ export interface IUserData {
     address: string;
 }
 
-export interface IOrderData extends IUserData, ITotalPrice {
+export interface IOrderData extends IUserData, ITotalAmount {
     payment: Payment;
     items: string[];
 }
 
-export interface IOrderResult extends ITotalPrice, IId {}
+export type OrderErrors = Partial<Record<keyof IUserData, string>>;
+
+export interface IOrderResult extends ITotalAmount, IId {}
 
 export interface IElementCollection {
     items: HTMLElement[];
@@ -50,19 +52,25 @@ export interface IElementCollection {
 
 export interface IPage extends IElementCollection {
     cartAmount: number;
+    locked: boolean;
 }
 
-export interface IModal {
-    content: HTMLElement;
+export interface ICart extends IElementCollection, ITotalAmount {}
+
+//export interface IContactForm extends IFormState {
+    //payment: Payment;
+//}
+
+export type State = 'browsing' | 'preview' | 'cart' | 'order_form' | 'contact_form' | 'order_success';
+
+export type TransitionMap = Record<State, Partial<Record<string, State>>>;
+
+export type StateDataMap = {
+    preview: IId;
 }
 
-export interface ICart extends IElementCollection, ITotalPrice {}
-
-export interface IFormState {
-    valid: boolean;
-    errors: keyof IOrderData[];
-}
-
-export interface IContactForm extends IFormState {
-    payment: Payment;
-}
+export type StateChangedEvent = {
+    [K in State]: K extends keyof StateDataMap
+      ? { state: K; data: StateDataMap[K] }
+      : { state: K; data?: unknown };
+  }[State];

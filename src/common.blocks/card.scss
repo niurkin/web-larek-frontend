@@ -16,6 +16,10 @@
     .card__title {
       flex-grow: 0;
     }
+
+    .card__price {
+      align-self: center;
+    }
   }
 
   &_compact {
@@ -50,6 +54,7 @@
     font-weight: 500;
     margin: 0;
     flex-grow: 1;
+    align-self: flex-start;
   }
   &__text {
     text-align: left;
@@ -60,6 +65,7 @@
     border-radius: 2.5rem;
     margin-bottom: 12px;
     color: $primary;
+    align-self: flex-start;
 
     &_soft {
       background-color: $category1;
@@ -81,6 +87,6 @@
 
   }
   &__price {
-
+    align-self: flex-start;
   }
 }
