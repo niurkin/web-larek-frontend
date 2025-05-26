@@ -22,6 +22,5 @@ export const transitions: TransitionMap = {
     },
     order_success: {
         'modal:close': 'browsing',
-        'success:close': 'browsing',
     }
 }
