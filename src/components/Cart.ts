@@ -1,5 +1,5 @@
 import {Component} from "./base/Component";
-import {cloneTemplate, createElement, ensureElement} from "../utils/utils";
+import {ensureElement} from "../utils/utils";
 import {IEvents} from "./base/events";
 import {ICart} from "../types";
 
@@ -22,6 +22,7 @@ export class Cart extends Component<ICart> {
         }
 
         this.items = [];
+        this.total = 0;
     }
 
     set items(items: HTMLElement[]) {
@@ -30,7 +31,15 @@ export class Cart extends Component<ICart> {
             this.setDisabled(this._button, false);
         }
         else {
+            this._items.replaceChildren();
             this.setDisabled(this._button, true);
+            this.setText(this._total, 'Корзина пуста');
+        }
+    }
+
+    set total(value: number) {
+        if (value !== 0) {
+            this.setText(this._total, `${value} синапсов`);
         }
     }
 }

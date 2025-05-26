@@ -18,7 +18,7 @@ export class Page extends Component<IPage> {
         this._cartCounter = ensureElement<HTMLElement>('.header__basket-counter');
 
         this._cartIcon.addEventListener('click', () => {
-            this.events.emit('cart:clicked');
+            this.events.emit('cart:open');
         });
     }
 

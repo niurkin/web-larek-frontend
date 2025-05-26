@@ -8,6 +8,10 @@ export interface IId {
     id: string;
 }
 
+export interface IPayment {
+    payment: Payment;
+}
+
 export interface ITotalAmount {
     total: number;
 }
@@ -28,7 +32,9 @@ export interface ICatalog {
     items: IShopItem[];
 }
 
-export interface IItemCard extends IShopItem, ICartCheck {}
+export interface IItemCard extends IShopItem, ICartCheck {
+    index: number;
+}
 
 
 export interface IUserData {
@@ -38,11 +44,15 @@ export interface IUserData {
 }
 
 export interface IOrderData extends IUserData, ITotalAmount {
-    payment: Payment;
     items: string[];
+    payment: Payment | undefined;
 }
 
-export type OrderErrors = Partial<Record<keyof IUserData, string>>;
+export type OrderInfo = Pick<IOrderData, 'payment' | 'address'>;
+
+export type ContactInfo = Pick<IUserData, 'email' | 'phone'>;
+
+export type OrderErrors = Partial<Record<keyof IOrderData, string>>;
 
 export interface IOrderResult extends ITotalAmount, IId {}
 
@@ -57,16 +67,13 @@ export interface IPage extends IElementCollection {
 
 export interface ICart extends IElementCollection, ITotalAmount {}
 
-//export interface IContactForm extends IFormState {
-    //payment: Payment;
-//}
-
 export type State = 'browsing' | 'preview' | 'cart' | 'order_form' | 'contact_form' | 'order_success';
 
 export type TransitionMap = Record<State, Partial<Record<string, State>>>;
 
 export type StateDataMap = {
     preview: IId;
+    order_success: ITotalAmount;
 }
 
 export type StateChangedEvent = {

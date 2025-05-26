@@ -28,7 +28,7 @@ export class ItemCard extends Component<IItemCard> {
             this._button.addEventListener('click', () => this.events.emit('item:cart-action', {id: this._id}));
         }
         else {
-            container.addEventListener('click', () => this.events.emit('item:clicked', {id: this._id}));
+            container.addEventListener('click', () => this.events.emit('preview:open', {id: this._id}));
         }
     }
 
@@ -50,9 +50,7 @@ export class ItemCard extends Component<IItemCard> {
             this.setText(this._price, `${value} синапсов`)
         }
 
-        if (this._button) {
-            this.setDisabled(this._button, nullPrice);
-        }
+        this.setDisabled(this._button, nullPrice);
     }
 
     set description (value: string) {
@@ -101,6 +99,12 @@ export class ItemCard extends Component<IItemCard> {
             else {
                 this.setText(this._button, 'Удалить');
             }
+        }
+    }
+
+    set index(value: number) {
+        if (this._index) {
+            this.setText(this._index, value);
         }
     }
 

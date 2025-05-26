@@ -31,6 +31,10 @@
     .card__title {
       flex-grow: 1;
     }
+
+    .card__price {
+      align-self: center;
+    }
   }
 
   &__column {

@@ -3,6 +3,7 @@ import {IEvents} from "./base/events";
 
 export class ShopStates {
     protected currentState: State = 'browsing';
+    protected previousState: State | undefined = undefined;
     protected transitions: TransitionMap;
 
     constructor (protected events: IEvents, transitions: TransitionMap) {
@@ -12,6 +13,7 @@ export class ShopStates {
     dispatch(event: string, data?: unknown) {
         const nextState = this.transitions[this.currentState]?.[event];
         if (nextState) {
+            this.previousState = this.currentState;
             this.setState(nextState);
 
             const payload: StateChangedEvent = {
@@ -20,7 +22,6 @@ export class ShopStates {
             };
 
             this.events.emit('state:changed', payload);
-            console.log(`State: ${this.getState()}`)
           }
     }
 
@@ -30,5 +31,9 @@ export class ShopStates {
 
     getState(): State {
         return this.currentState;
+    }
+
+    getPreviousState(): State | 'none' {
+        return this.previousState;
     }
 }

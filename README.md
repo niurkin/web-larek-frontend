@@ -62,6 +62,10 @@ interface IId {
     id: string;
 } // Интерфейс для описания идентификатора товара или заказа
 
+interface IPayment {
+    payment: Payment;
+} // Интерфейс для описания способа оплаты
+
 interface ITotalAmount { 
     total: number;
 } // Интерфейс для описания суммарного числа
@@ -82,7 +86,9 @@ interface ICatalog {
     items: IShopItem[];
 } // Интерфейс для описания каталога товаров
 
-interface IItemCard extends IShopItem, ICartCheck {} // Интерфейс для передачи данных в компонент представления, отвечающий за карточку товара
+interface IItemCard extends IShopItem, ICartCheck {
+    index: number;
+} // Интерфейс для передачи данных в компонент представления, отвечающий за карточку товара
 
 interface IUserData {
     email: string;
@@ -91,9 +97,13 @@ interface IUserData {
 } // Интерфейс для описания данных пользователя
 
 interface IOrderData extends IUserData, ITotalAmount {
-    payment: Payment;
+    payment: Payment | undefined;
     items: string[];
 } // Интерфейс для описания данных заказа
+
+type OrderInfo = Pick<IOrderData, 'payment' | 'address'>; // Тип для передачи данных в компонент представления, отвечающий за форму заказа
+
+type ContactInfo = Pick<IUserData, 'email' | 'phone'>; // Тип для передачи данных в компонент представления, отвечающий за форму контактной информации
 
 type OrderErrors = Partial<Record<keyof IOrderData, string>> // Интерфейс для описания ошибок при оформлении заказа
 
@@ -128,6 +138,21 @@ interface IEvents {
     emit<T extends object>(event: string, data?: T): void;
     trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void;
 } // Интерфейс для описания брокера событий
+
+type State = 'browsing' | 'preview' | 'cart' | 'order_form' | 'contact_form' | 'order_success' — Интерфейс для описания состояний сайта
+
+type TransitionMap = Record<State, Partial<Record<string, State>>> — Тип карты, описывающей навигацию между состояниями
+
+export type StateDataMap = {
+    preview: IId;
+    order_success: ITotalAmount;
+} // Карта, описывающая типы данных, которые передаются в брокер событий при переходе в определенные состояния
+
+export type StateChangedEvent = {
+    [K in State]: K extends keyof StateDataMap
+      ? { state: K; data: StateDataMap[K] }
+      : { state: K; data?: unknown };
+  }[State] // Тип для определения состояний, которым требуются данные поределенного типа, перечисленных в карте StateDataMap
 ```
 
 ### Базовые компоненты
@@ -194,7 +219,7 @@ interface IEvents {
 
 `order: IOrderData` — сведения о заказе
 
-`orderErrors: OrderErrors` — объект для проверки ошибок, которые могут возникнуть при выполнении заказа
+`orderErrors: OrderErrors` — объект для ошибок, которые могут возникнуть при оформлении заказа
 
 ##### Методы класса
 
@@ -207,6 +232,8 @@ interface IEvents {
 `removeFromCart(id: string)` — удаляет товар из корзины
 
 `clearCart()` — удаляет все товары из корзины
+
+`clearOrderInfo()` — сбрасывает контактную информацию и способ оплаты в заказе
 
 `getCartAmount(): number` — возвращает общее количество товаров в корзине
 
@@ -235,6 +262,34 @@ interface IEvents {
 `getItem(id: string): Promise<IShopItem>` — позволяет получить определенный товар с сервера
 
 `placeOrder(order: IOrderData): Promise<IOrderResult>` — позволяет разместить заказ на сервере
+
+#### Класс `ShopStates`
+
+Класс для управления состояниями магазина.
+
+Конструктор принимает следующие аргументы:
+
+`events: IEvents` — брокер событий
+
+`transitions: TransitionMap` — карта, описывающая навигацию между состояниями
+
+##### Поля класса
+
+`currentState: State` — поле, в котором хранится текущее состояние
+
+`previousState: State | undefined` — поле, в котором хранится предыдущее состояние
+
+`transitions: TransitionMap` — карта, описывающая навигацию между состояниями
+
+##### Методы класса
+
+`dispatch(event: string, data?: unknown)` — реагирует на события, присутствующие в карте `transitions`, при необходимости передает нужные данные и переключается в соответствующее состояние, указанное в `transitions`
+
+`setState(value: State)` — позволяет указать значение поля `currentState`
+
+`getState()` — врзвращает значение поля `currentState`
+
+`getPreviousState` — врзвращает значение поля `previousState`
 
 ### Компоненты представления
 
@@ -302,9 +357,11 @@ interface IEvents {
 
 `set image (value: string)` — определяет содержимое элемента `_image`, если таковой присутствует
 
-`set category (value: ItemCategory)` — определяет текстовое содержимое элемента `category`, если таковой присутствует
+`set category (value: ItemCategory)` — определяет текстовое содержимое элемента `_category`, если таковой присутствует
 
 `set inCart(value: boolean)` — определяет текстовое содержимое кнопки `_button` в соответствии со значением
+
+`set index (value: number)` — определяет текстовое содержимое элемента `_index`, если таковой присутствует
 
 `getId(): string` — возвращает значение поля `_id`
 
@@ -350,13 +407,13 @@ interface IEvents {
 
 ##### Методы класса
 
-`set items(value: HTMLElement[])` — наполняет элемент `_items` карточками товаров, а также определяет статус активности кнопки `_button` в зависимости от наличия товаров
+`set items(items: HTMLElement[])` — наполняет элемент `_items` карточками товаров, а также определяет статус активности кнопки `_button` в зависимости от наличия товаров
 
 `set total(value: Price)` — определяет текстовое содержимое элемента `_total` 
 
-#### Класс `Form<T extends IFormState = IFormState>`
+#### Класс `Form<T>`
 
-Наследует класс `Component<T>`. По умолчанию принимает в переменную `T` объект, соответствующий интерфейсу `IFormState`, но позволяет использовать любой другой интерфейс, расширяющий `IFormState`, у классов, которые его наследуют.
+Базовый класс, который наследуют все компоненты представления. Класс является дженериком и принимает в переменной `T` тип данных, используемый дочерними классами.
 
 Общий класс для отображения всех форм в проекте.
 
@@ -364,23 +421,24 @@ interface IEvents {
 
 ##### Поля класса
 
-`_button: HTMLButtonElement` — кнопка сабмита формы
+`_submit: HTMLButtonElement` — кнопка отправки формы
 
-`_error: HTMLElement` — отображение ошибок при заполнении или сабмите формы
-
-`_inputs: HTMLInputElement[]` — массив с текстовыми полями формы
+`_errors: HTMLElement` — отображение ошибок при заполнении или сабмите формы
 
 ##### Методы класса
 
-`set errors(value: keyof IOrderData[])` — отвечает за отображение текстовых полей, с которыми связаны ошибки
+`onInputChange(field: keyof T, value: string)` — генерирует события в случае инпута
 
 `set valid(data: boolean)` — изменяет статус активности кнопки в зависимости от значения
 
-`displayError(value: string)` — определяет текстовое содержимое элемента `_error`
+`set errors(value: string)` — отвечает за отображение текстовое содержимое элемента `_errors`
+
+`render(state: Partial<T> & IFormState)` — отвечает за отображение формы в соответствии с переданными данными
+
 
 #### Класс `OrderForm`
 
-Наследует класс `Form<IContactForm>`.
+Наследует класс `Form<OrderInfo>`.
 
 Используется для отображения формы оформления заказа с выбором способа оплаты.
 
@@ -388,17 +446,17 @@ interface IEvents {
 
 ##### Поля класса
 
-`_paymentSelection: HTMLElement` — элемент с кнопками выбора способа оплаты.
+`_buttons: HTMLButtonElement[]` — кнопки выбора способа оплаты.
 
 ##### Методы класса
 
-`set payment(value: Payment)` — определяет статус активности кнопки с атрибутом `name`, соответствующим переданному значению
-
 `set address(value: string)` — позволяет задать значение полю с именем `address`
+
+`set payment(value: Payment)` — определяет статус активности кнопки с атрибутом `name`, соответствующим переданному значению
 
 #### Класс `ContactForm`
 
-Наследует класс `Form`.
+Наследует класс `Form<ContactInfo>`.
 
 Используется для отображения формы с указанием контактных данных.
 
@@ -412,7 +470,7 @@ interface IEvents {
 
 #### Класс `OrderSuccess`
 
-Наследует класс `Component` с переданным типом `<ITotalPrice>`.
+Наследует класс `Component` с переданным типом `<ITotalAmount>`.
 
 Отвечает за отображение подтверждения успешной покупки.
 
@@ -426,4 +484,4 @@ interface IEvents {
 
 ##### Методы класса
 
-`set total(value: Price)` — определяет текстовое содержимое элемента `_spent`
+`set total(value: number)` — определяет текстовое содержимое элемента `_spent`
