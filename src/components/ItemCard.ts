@@ -68,26 +68,29 @@ export class ItemCard extends Component<IItemCard> {
     set category (value: ItemCategory) {
         if (this._category) {
             this.setText(this._category, value);
-
+            
+            let categoryClass: string = '';
             switch (value) {
                 case 'софт-скил':
-                    this._category.classList.add('card__category_soft');
+                    categoryClass = 'card__category_soft';
                     break;
                 case 'другое':
-                    this._category.classList.add('card__category_other');
+                    categoryClass = 'card__category_other';
                     break;
                 case 'дополнительное':
-                    this._category.classList.add('card__category_additional');
+                    categoryClass = 'card__category_additional';
                     break;
                 case 'кнопка':
-                    this._category.classList.add('card__category_button');
+                    categoryClass = 'card__category_button';
                     break;
                 case 'хард-скил':
-                    this._category.classList.add('card__category_hard');
+                    categoryClass = 'card__category_hard';
                     break;
                 default:
-                    this._category.classList.add('card__category_other');
+                    categoryClass = 'card__category_other';
             }
+
+            this._category.className = `card__category ${categoryClass}`;
         }
     }
 
