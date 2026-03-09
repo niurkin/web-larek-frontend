@@ -8,9 +8,26 @@
 
  ## Технологии
 
-<p align="center">
-  <img src="https://skillicons.dev/icons?i=html,scss,typescript,webpack" height="50" />
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="https://skillicons.dev/icons?i=html" width="50"/><br/>
+      <sub>HTML5</sub>
+    </td>
+    <td align="center">
+      <img src="https://skillicons.dev/icons?i=scss" width="50"/><br/>
+      <sub>SCSS</sub>
+    </td>
+    <td align="center">
+      <img src="https://skillicons.dev/icons?i=typescript" width="50"/><br/>
+      <sub>TypeScript</sub>
+    </td>
+   <td align="center">
+      <img src="https://skillicons.dev/icons?i=webpack" width="50"/><br/>
+      <sub>Webpack</sub>
+    </td>
+  </tr>
+</table>
 
 ## Особенности
 
@@ -616,14 +633,18 @@ yarn build
 
 - `set total(value: number)` — определяет текстовое содержимое элемента `_spent`
 
-## Цели проекта
+## Задачи
 
-В рамках этого проекта я освоил и успешно применил следующие навыки:
+В рамках этого проекта я выполнил следующие задачи.
 
-- использование принципов ООП и создание классовых компонентов
+- Спроектировал и задокументировал архитектуру, соответствующую принципам ООП.
 
-- типизация данных в TypeScript, применение интерфейсов и дженериков
+- Типизировал данные в TypeScript, применив интерфейсы и дженерики.
 
-- планирование архитектуры приложений
+- Реализовал код слоев отображения и данных.
 
-- реализация состояний приложения
+- Реализовал модель данных и интегрировал ее с API.
+
+- Реализовал компоненты интерфейса.
+
+- Реализовал состоянияя экранов и организовал механизм перехода между состояниями.
